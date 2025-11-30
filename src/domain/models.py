@@ -5,6 +5,7 @@ from .value_objects import (
     ReservationStatus, ContactInfo, ReservationTime, 
     ReservationPolicy, CancellationReason
 )
+from .events import DomainEvent, ReservationCreated, ReservationConfirmed, ReservationCancelled
 
 class TableAssignment:
     def __init__(self, table_id: uuid.UUID, capacity: int, area: str):
@@ -39,7 +40,15 @@ class Reservation:
         self.table_assignment: Optional[TableAssignment] = None
         self.history: List[ReservationHistory] = []
         
+        self.domain_events: List[DomainEvent] = []
+        
         self._record_history("CREATED", "Reservation created")
+        
+        self.domain_events.append(ReservationCreated(
+            reservation_id=self.reservation_id,
+            customer_id=self.customer_id,
+            start_time=self.reservation_time.start_time
+        ))
 
     def _record_history(self, action: str, note: str):
         log = ReservationHistory(action, note)
@@ -51,6 +60,10 @@ class Reservation:
         
         self.status = ReservationStatus.CONFIRMED
         self._record_history("CONFIRMED", "Reservation confirmed by system/staff")
+        
+        self.domain_events.append(ReservationConfirmed(
+            reservation_id=self.reservation_id
+        ))
 
     def cancel_reservation(self, reason: CancellationReason):
         if self.status == ReservationStatus.COMPLETED:
@@ -58,6 +71,11 @@ class Reservation:
             
         self.status = ReservationStatus.CANCELLED
         self._record_history("CANCELLED", f"{reason.reason_code}: {reason.description}")
+        
+        self.domain_events.append(ReservationCancelled(
+            reservation_id=self.reservation_id,
+            reason=reason.reason_code
+        ))
 
     def assign_table(self, table_id: uuid.UUID, capacity: int, area: str):
         if self.status == ReservationStatus.CANCELLED:
@@ -65,3 +83,8 @@ class Reservation:
             
         self.table_assignment = TableAssignment(table_id, capacity, area)
         self._record_history("TABLE_ASSIGNED", f"Assigned to Table ID {table_id} ({area})")
+        
+    def collect_domain_events(self) -> List[DomainEvent]:
+        events = self.domain_events[:]
+        self.domain_events.clear()
+        return events

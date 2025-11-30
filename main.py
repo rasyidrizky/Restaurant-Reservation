@@ -4,7 +4,7 @@ from src.api.routes import router as reservation_router
 
 app = FastAPI(
     title="Restaurant Reservation System",
-    description="API implementation for II3160 Teknologi Sistem Terintegrasi - Tugas Desain Taktis",
+    description="API implementation for II3160 Teknologi Sistem Terintegrasi",
     version="1.0.0"
 )
 
