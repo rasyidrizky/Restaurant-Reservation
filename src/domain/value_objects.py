@@ -36,5 +36,5 @@ class ReservationPolicy(BaseModel):
 class PaymentDetail(BaseModel):
     payment_id: Optional[UUID] = None
     amount: float = 0.0
-    status: str = "UNPAID" # Bisa "PAID", "REFUNDED"
-    method: Optional[str] = None # "CREDIT_CARD", "QRIS"
+    status: str = "UNPAID"
+    method: Optional[str] = None
