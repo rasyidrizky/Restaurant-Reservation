@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import List, Optional
 from .value_objects import (
     ReservationStatus, ContactInfo, ReservationTime, 
-    ReservationPolicy, CancellationReason
+    ReservationPolicy, CancellationReason,
+    PaymentDetail
 )
 from .events import DomainEvent, ReservationCreated, ReservationConfirmed, ReservationCancelled
 
@@ -36,6 +37,7 @@ class Reservation:
         self.policy = policy
         
         self.status = ReservationStatus.PENDING
+        self.payment_detail = PaymentDetail()
         
         self.table_assignment: Optional[TableAssignment] = None
         self.history: List[ReservationHistory] = []

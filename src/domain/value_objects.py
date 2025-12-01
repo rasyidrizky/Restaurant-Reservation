@@ -1,3 +1,4 @@
+from uuid import UUID
 from enum import Enum
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, timedelta
@@ -31,3 +32,9 @@ class CancellationReason(BaseModel):
 class ReservationPolicy(BaseModel):
     deposit_required: bool = False
     auto_cancel_minutes: int = 15
+    
+class PaymentDetail(BaseModel):
+    payment_id: Optional[UUID] = None
+    amount: float = 0.0
+    status: str = "UNPAID" # Bisa "PAID", "REFUNDED"
+    method: Optional[str] = None # "CREDIT_CARD", "QRIS"

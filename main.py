@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from src.api.routes import router as reservation_router
+from src.api.auth import router as auth_router
 
 app = FastAPI(
     title="Restaurant Reservation System",
@@ -8,6 +9,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.include_router(auth_router, prefix="/api", tags=["Authentication"])
 app.include_router(reservation_router, prefix="/api", tags=["Reservations"])
 
 if __name__ == "__main__":

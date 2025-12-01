@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, List
 from uuid import UUID
 
@@ -8,13 +8,14 @@ from src.schemas.reservation import (
     CreateReservationRequest, ReservationResponse, 
     AssignTableRequest, CancelRequest
 )
+from src.core.security import get_current_user
 
 router = APIRouter()
 
 reservation_db: Dict[UUID, Reservation] = {}
 
 @router.post("/reservations", response_model=ReservationResponse)
-def create_reservation(request: CreateReservationRequest):
+def create_reservation(request: CreateReservationRequest, current_user: str = Depends(get_current_user)):
     time_vo = ReservationTime(
         start_time=request.start_time, 
         duration_minutes=request.duration_minutes
@@ -33,7 +34,7 @@ def create_reservation(request: CreateReservationRequest):
     return map_to_response(new_reservation)
 
 @router.get("/reservations/{reservation_id}", response_model=ReservationResponse)
-def get_reservation(reservation_id: UUID):
+def get_reservation(reservation_id: UUID, current_user: str = Depends(get_current_user)):
     if reservation_id not in reservation_db:
         raise HTTPException(status_code=404, detail="Reservation not found")
     
@@ -41,7 +42,7 @@ def get_reservation(reservation_id: UUID):
     return map_to_response(reservation)
 
 @router.post("/reservations/{reservation_id}/confirm")
-def confirm_reservation(reservation_id: UUID):
+def confirm_reservation(reservation_id: UUID, current_user: str = Depends(get_current_user)):
     if reservation_id not in reservation_db:
         raise HTTPException(status_code=404, detail="Reservation not found")
     
@@ -55,7 +56,7 @@ def confirm_reservation(reservation_id: UUID):
     return {"message": "Reservation confirmed", "status": reservation.status}
 
 @router.post("/reservations/{reservation_id}/assign-table")
-def assign_table(reservation_id: UUID, request: AssignTableRequest):
+def assign_table(reservation_id: UUID, request: AssignTableRequest, current_user: str = Depends(get_current_user)):
     if reservation_id not in reservation_db:
         raise HTTPException(status_code=404, detail="Reservation not found")
     
@@ -69,7 +70,7 @@ def assign_table(reservation_id: UUID, request: AssignTableRequest):
     return {"message": "Table assigned successfully"}
 
 @router.post("/reservations/{reservation_id}/cancel")
-def cancel_reservation(reservation_id: UUID, request: CancelRequest):
+def cancel_reservation(reservation_id: UUID, request: CancelRequest, current_user: str = Depends(get_current_user)):
     if reservation_id not in reservation_db:
         raise HTTPException(status_code=404, detail="Reservation not found")
     
