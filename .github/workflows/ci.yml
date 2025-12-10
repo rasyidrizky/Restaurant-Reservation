@@ -1,0 +1,52 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. Checkout kode dari repo
+    - uses: actions/checkout@v3
+
+    # 2. Setup Python 3.10
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    # 3. Install Dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Install library utama + library testing
+        pip install -r requirements.txt
+        pip install flake8 pytest pytest-cov httpx pytest-asyncio
+
+    # 4. Linting
+    - name: Lint with flake8
+      run: |
+        # stop build jika ada error syntax fatal
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # warning untuk style guide (tidak menghentikan build)
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    # 5. Running Unit Test & Check Coverage
+    - name: Test with pytest
+      run: |
+        # Gagal jika coverage di bawah 95%
+        pytest --cov=src --cov-report=term-missing --cov-fail-under=95
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker Image
+      run: docker build . --file Dockerfile --tag restaurant-api:latest
