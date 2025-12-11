@@ -1,26 +1,45 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.infrastructure.database import Base, get_db
+from src.core.security import get_current_user
 from main import app
-from src.api.routes import reservation_db
+import os
 
-@pytest.fixture
-def client():
-    return TestClient(app)
+SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/restoran_db"
 
-@pytest.fixture(autouse=True)
-def reset_db():
-    """Membersihkan database in-memory sebelum setiap test berjalan"""
-    reservation_db.clear()
-    yield
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture(scope="function")
+def db_session():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@pytest.fixture(scope="function")
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            db_session.close()
+    
+    def override_get_current_user():
+        return "admin_test"
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    
+    with TestClient(app) as c:
+        yield c
 
 @pytest.fixture
 def auth_headers(client):
-    """Mendapatkan token admin untuk testing endpoint protected"""
-    # Pastikan data user dummy sesuai dengan src/api/auth.py
-    response = client.post(
-        "/api/token",
-        data={"username": "admin", "password": "password123"},
-        headers={"content-type": "application/x-www-form-urlencoded"}
-    )
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    pass 
