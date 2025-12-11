@@ -7,7 +7,12 @@ from src.core.security import get_current_user
 from main import app
 import os
 
-SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/restoran_db"
+database_url = os.getenv("DATABASE_URL")
+
+if not database_url:
+    database_url = "postgresql://user:password@localhost:5432/restoran_db"
+
+SQLALCHEMY_DATABASE_URL = database_url
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -42,4 +47,4 @@ def client(db_session):
 
 @pytest.fixture
 def auth_headers(client):
-    pass 
+    pass

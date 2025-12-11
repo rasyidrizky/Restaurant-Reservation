@@ -7,7 +7,7 @@ try:
         host="localhost",
         port="5432"
     )
-    print("✅ KONEKSI SUKSES!")
+    print("KONEKSI SUKSES!")
     conn.close()
 except Exception as e:
-    print(f"❌ KONEKSI GAGAL: {e}")
+    print(f"KONEKSI GAGAL: {e}")
