@@ -9,7 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: restoran_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     # 1. Checkout kode dari repo
     - uses: actions/checkout@v3
@@ -38,6 +52,11 @@ jobs:
 
     # 5. Running Unit Test & Check Coverage
     - name: Test with pytest
+      env:
+        DATABASE_URL: postgresql://user:password@localhost:5432/restoran_db
+        SECRET_KEY: rahasia_testing_123
+        ALGORITHM: HS256
+        ACCESS_TOKEN_EXPIRE_MINUTES: 30
       run: |
         # Gagal jika coverage di bawah 95%
         pytest --cov=src --cov-report=term-missing --cov-fail-under=95
