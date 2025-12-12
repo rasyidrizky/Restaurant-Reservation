@@ -1,0 +1,21 @@
+# Folder Virtual Environment
+venv
+.venv
+env
+
+# Cache Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Git & Docker
+.git
+.gitignore
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Testing
+.pytest_cache
+tests
